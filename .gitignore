@@ -1,0 +1,4 @@
+KNN/regrssion/house_prices.csv
+SVM/Regression/genz_social_media_usage_1M.csv
+__pycache__/
+*.pyc
