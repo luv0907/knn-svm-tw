@@ -55,13 +55,13 @@ SVM_REGRESSION_FEATURES = [
 
 
 st.set_page_config(
-	page_title="Creamy ML Studio",
+	page_title="ML Studio",
 	page_icon="📊",
 	layout="wide",
 	initial_sidebar_state="expanded",
 )
 
-UI_VERSION = "Concept UI v2"
+UI_VERSION = "Professional UI v1.0"
 
 
 def apply_creamy_theme() -> None:
@@ -251,142 +251,128 @@ def parse_sqft(value) -> float:
 			token += char
 		elif token:
 			break
-	return float(token) if token else np.nan
-
-
-def parse_floor(value) -> tuple[float, float]:
-	if pd.isna(value):
-		return np.nan, np.nan
-	digits = [item for item in str(value).replace("-", " ").split() if item.isdigit()]
-	if not digits:
-		return np.nan, np.nan
-	if len(digits) == 1:
-		return float(digits[0]), np.nan
-	return float(digits[0]), float(digits[1])
-
-
-def extract_bhk(value) -> float:
-	if pd.isna(value):
-		return np.nan
-	text = str(value).lower()
-	token = ""
-	for part in text.replace("/", " ").split():
-		if part.isdigit():
-			token = part
-			break
-	if "bhk" in text and token:
-		return float(token)
-	return np.nan
-
-
-def parse_parking(value) -> float:
-	if pd.isna(value):
-		return 0.0
-	text = str(value)
-	token = ""
-	for char in text:
-		if char.isdigit():
-			token += char
-		elif token:
-			break
-	return float(token) if token else 0.0
-
-
-def safe_float(value) -> float:
-	try:
-		return float(value)
-	except Exception:
-		return np.nan
-
-
-def detect_house_price_target(df: pd.DataFrame) -> str:
-	price_cols = [col for col in df.columns if "price" in col.lower()]
-	if price_cols:
-		return price_cols[0]
-	numeric_cols = df.select_dtypes(include=[np.number]).columns.tolist()
-	if numeric_cols:
-		return numeric_cols[-1]
-	return df.columns[-1]
-
-
-def engineer_house_price_features(df: pd.DataFrame) -> pd.DataFrame:
-	result = df.copy()
-	result["amount_rupees"] = get_series(result, "Amount(in rupees)").apply(parse_amount)
-	result["carpet_sqft"] = get_series(result, "Carpet Area").apply(parse_sqft)
-	result["super_area_sqft"] = get_series(result, "Super Area").apply(parse_sqft)
-	result["plot_area_sqft"] = get_series(result, "Plot Area").apply(parse_sqft)
-	result["dimensions"] = get_series(result, "Dimensions").apply(safe_float)
-	result["bhk"] = get_series(result, "Title").apply(extract_bhk)
-	floor_values = get_series(result, "Floor").apply(parse_floor).apply(pd.Series)
-	floor_values.columns = ["floor_num", "total_floors"]
-	result[["floor_num", "total_floors"]] = floor_values
-	result["parking_count"] = get_series(result, "Car Parking").apply(parse_parking)
-
-	for column in ["Bathroom", "Balcony"]:
-		if column in result.columns:
-			result[column] = result[column].apply(safe_float)
-
-	drop_columns = [
-		column
-		for column in ["Index", "Title", "Description", "Society", "Amount(in rupees)"]
-		if column in result.columns
-	]
-	result = result.drop(columns=drop_columns)
-	return result
-
-
-def build_preprocessor(df: pd.DataFrame) -> tuple[ColumnTransformer, list[str], list[str]]:
-	working_df = df.loc[:, df.notna().any()].copy()
-	numeric_columns = working_df.select_dtypes(include=[np.number]).columns.tolist()
-	categorical_columns = [column for column in working_df.columns if column not in numeric_columns]
-
-	transformers = []
-	if numeric_columns:
-		transformers.append(("num", Pipeline([("impute", SimpleImputer(strategy="median")), ("scale", StandardScaler())]), numeric_columns))
-	if categorical_columns:
-		transformers.append(
-			(
-				"cat",
-				Pipeline(
-					[
-						("impute", SimpleImputer(strategy="most_frequent")),
-						("encode", one_hot_encoder()),
-					]
-				),
-				categorical_columns,
-			)
-		)
-
-	preprocessor = ColumnTransformer(transformers=transformers, remainder="drop")
-	return preprocessor, numeric_columns, categorical_columns
-
-
-def render_metric_row(metrics: list[tuple[str, float, str]]) -> None:
-	columns = st.columns(len(metrics))
-	for column, (label, value, suffix) in zip(columns, metrics):
-		column.metric(label, f"{value:.4f}{suffix}")
-
-
-def plot_confusion_matrix(matrix: np.ndarray, class_names: list[str]) -> plt.Figure:
-	fig, ax = plt.subplots(figsize=(4.8, 4.2))
-	image = ax.imshow(matrix, cmap="YlOrBr")
-	ax.set_xticks(range(len(class_names)))
-	ax.set_yticks(range(len(class_names)))
-	ax.set_xticklabels(class_names, rotation=30, ha="right")
-	ax.set_yticklabels(class_names)
-	ax.set_xlabel("Predicted")
-	ax.set_ylabel("Actual")
-	ax.set_title("Confusion Matrix")
-	for row in range(matrix.shape[0]):
-		for col in range(matrix.shape[1]):
-			ax.text(col, row, int(matrix[row, col]), ha="center", va="center", color="#3b2f24", fontsize=11)
-	fig.colorbar(image, ax=ax, fraction=0.045, pad=0.04)
-	fig.tight_layout()
-	return fig
-
-
-def plot_regression_scatter(y_test: pd.Series, predictions: np.ndarray, title: str) -> plt.Figure:
-	fig, ax = plt.subplots(figsize=(5.2, 4.2))
+def apply_professional_theme() -> None:
+	st.markdown(
+		"""
+		<style>
+		:root {
+			--primary-blue: #0d47a1;
+			--secondary-blue: #1565c0;
+			--light-gray: #f5f5f5;
+			--border-gray: #e0e0e0;
+			--text-dark: #212121;
+			--text-light: #616161;
+		}
+		.stApp {
+			background-color: #fafafa;
+			color: var(--text-dark);
+		}
+		.block-container {
+			padding-top: 1.5rem;
+			padding-bottom: 2rem;
+			max-width: 1200px;
+		}
+		.hero {
+			background: #ffffff;
+			border: 1px solid var(--border-gray);
+			border-radius: 8px;
+			padding: 2rem;
+			box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+			margin-bottom: 1.5rem;
+		}
+		.hero-badge {
+			display: inline-block;
+			padding: 0.4rem 0.8rem;
+			border-radius: 4px;
+			background: var(--primary-blue);
+			color: white;
+			font-weight: 600;
+			font-size: 0.8rem;
+			letter-spacing: 0.05em;
+			margin-bottom: 1rem;
+		}
+		.panel {
+			background: #ffffff;
+			border: 1px solid var(--border-gray);
+			border-radius: 8px;
+			padding: 1.2rem;
+			box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+			margin-bottom: 1.2rem;
+		}
+		.panel h3 {
+			color: var(--primary-blue);
+			font-weight: 600;
+			margin-bottom: 1rem;
+		}
+		.hero h1, .hero h2 {
+			color: var(--primary-blue);
+			font-weight: 700;
+		}
+		.hero p {
+			color: var(--text-light);
+		}
+		[data-testid="stMarkdown"] h2 {
+			color: var(--primary-blue);
+			font-weight: 600;
+			margin-top: 1rem;
+		}
+		div[data-testid="stMetric"] {
+			background: #ffffff;
+			border: 1px solid var(--border-gray);
+			border-radius: 8px;
+			padding: 1rem;
+			box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+		}
+		label, .stSelectbox label, .stNumberInput label, .stSlider label {
+			color: var(--text-dark) !important;
+			font-weight: 500 !important;
+			font-size: 0.95rem !important;
+		}
+		div[data-baseweb="select"] > div,
+		div[data-baseweb="input"] > div,
+		div[data-testid="stNumberInput"] input {
+			background: #ffffff !important;
+			border-radius: 6px !important;
+			border: 1px solid var(--border-gray) !important;
+		}
+		.small-note {
+			color: var(--text-light);
+			font-size: 0.9rem;
+		}
+		div[data-testid="stButton"] button {
+			border-radius: 6px;
+			border: none;
+			background: var(--primary-blue);
+			color: white;
+			font-weight: 600;
+			padding: 0.5rem 1rem;
+			transition: background 200ms ease;
+		}
+		div[data-testid="stButton"] button:hover {
+			background: var(--secondary-blue);
+		}
+		div[data-testid="stExpander"] {
+			background: #ffffff;
+			border-radius: 6px;
+			border: 1px solid var(--border-gray);
+		}
+		div[data-testid="stSidebar"] {
+			background: #ffffff;
+			border-right: 1px solid var(--border-gray);
+		}
+		section[data-testid="stSidebar"] h1,
+		section[data-testid="stSidebar"] h2 {
+			color: var(--primary-blue) !important;
+		}
+		section[data-testid="stSidebar"] label,
+		section[data-testid="stSidebar"] p,
+		section[data-testid="stSidebar"] span {
+			color: var(--text-dark) !important;
+		}
+		</style>
+		""",
+		unsafe_allow_html=True,
+	)
 	ax.scatter(y_test, predictions, alpha=0.5, color="#b87b4b")
 	min_value = min(float(np.min(y_test)), float(np.min(predictions)))
 	max_value = max(float(np.max(y_test)), float(np.max(predictions)))
@@ -824,11 +810,11 @@ def svm_regression_page() -> None:
 
 
 def main() -> None:
-	apply_creamy_theme()
+	apply_professional_theme()
 	app_header()
 
 	with st.sidebar:
-		st.title("Creamy ML Concept Lab")
+		st.title("ML Studio")
 		st.caption(UI_VERSION)
 		st.caption("Simple model playground for your KNN and SVM notebooks")
 		page = st.radio(
