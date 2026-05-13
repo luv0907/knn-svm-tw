@@ -1013,8 +1013,14 @@ def knn_regression_page() -> None:
         if "Carpet Area" in pf.columns: pf["Carpet Area"] = pf["Carpet Area"].apply(parse_sqft)
         for c in ["Bathroom","Balcony","Car Parking"]:
             if c in pf.columns: pf[c] = pd.to_numeric(pf[c], errors="coerce")
-        pf = pf.reindex(columns=X.columns)
-        st.success(f"✦ Predicted price → **{model.predict(pf)[0]:,.2f}**")
+        pf = pf.reindex(columns=X.columns, fill_value=np.nan)
+        try:
+            pred_val = model.predict(pf)[0]
+            st.success(f"✦ Predicted price → **{pred_val:,.2f}**")
+        except Exception as e:
+            st.error(f"Prediction failed: {e}")
+            st.caption("Prediction input (for debugging):")
+            st.dataframe(pf.T, use_container_width=True)
     st.markdown('</div>', unsafe_allow_html=True)
 
 
