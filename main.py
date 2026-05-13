@@ -373,10 +373,12 @@ def apply_professional_theme() -> None:
 		""",
 		unsafe_allow_html=True,
 	)
-	ax.scatter(y_test, predictions, alpha=0.5, color="#b87b4b")
+def plot_predictions(y_test: pd.Series, predictions: np.ndarray, title: str) -> plt.Figure:
+	fig, ax = plt.subplots(figsize=(5.2, 4.0))
+	ax.scatter(y_test, predictions, alpha=0.5, color="#1565c0")
 	min_value = min(float(np.min(y_test)), float(np.min(predictions)))
 	max_value = max(float(np.max(y_test)), float(np.max(predictions)))
-	ax.plot([min_value, max_value], [min_value, max_value], linestyle="--", color="#6f5a44")
+	ax.plot([min_value, max_value], [min_value, max_value], linestyle="--", color="#90a4ae")
 	ax.set_xlabel("Actual")
 	ax.set_ylabel("Predicted")
 	ax.set_title(title)
